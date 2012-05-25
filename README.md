@@ -3,7 +3,8 @@ sprintly-to-github
 
 Python scripts for fetching data from sprintly and pushing it to github issue tracker. It will try to overwrite any existing issues but may not be able to if you didn't create them, I haven't tried this.
 
-**One big problem:** the sprint.ly API seems to provide no way to fetch sub-items at the moment (e.g. tasks within stories).
+##One big problem
+The sprint.ly API seems to provide no way to fetch sub-items (e.g. tasks within stories) or archived items at the moment.
 
 I've only tested it on this one project which went OK: [csl-editor](https://github.com/citation-style-editor/csl-editor).
 
