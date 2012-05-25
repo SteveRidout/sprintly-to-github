@@ -126,7 +126,7 @@ for item in data['items']:
     
     request('/repos/' + ownerName + '/' + repoName + '/issues/' + str(item['number']),
         'POST', json.dumps(issue))
-sys.exit()
+
 # add comments
 for number in data['comments']:
     comments = data['comments'][number]
