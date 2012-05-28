@@ -1,6 +1,6 @@
 #!/bin/python
 
-import urllib, urllib2, base64, sys, json
+import urllib, urllib2, base64, sys, json, time
 from datetime import datetime
 
 if (len(sys.argv) != 5):
@@ -24,14 +24,20 @@ def request(path, method='GET', data=None):
     print 'path: ', path
     print 'data: ', data
     if (data is None):
-        request = urllib2.Request("https://api.github.com" + path)
+        thisRequest = urllib2.Request("https://api.github.com" + path)
     else:
-        request = urllib2.Request("https://api.github.com" + path, data)
+        thisRequest = urllib2.Request("https://api.github.com" + path, data)
     base64string = base64.encodestring(
         '%s:%s' % (username, password)).replace('\n', '')
-    request.add_header("Authorization", "Basic %s" % base64string)
-    request.get_method = lambda: method
-    result = urllib2.urlopen(request)
+    thisRequest.add_header("Authorization", "Basic %s" % base64string)
+    thisRequest.get_method = lambda: method
+    try:
+        result = urllib2.urlopen(thisRequest)
+    except:
+        # this is becuase I encountered problems with github not responding
+        print 'retrying...'
+        return request(path, method, data)
+
     return result.read()
 
 def prettyDate(timestampString):
@@ -96,6 +102,10 @@ for item in data['items']:
     body = 'Imported from Sprint.ly\n'
     body += '\nOriginal Creator: ' + creator
     body += '\nCreated at: ' + prettyDate(item['created_at'])
+    
+    if 'parent' in item:
+        body += '\nParent issue: #' + str(item['parent'])
+
     body += '\n\n'
     body += item['description']
     
