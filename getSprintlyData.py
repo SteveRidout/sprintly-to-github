@@ -13,6 +13,10 @@ if (len(sys.argv) != 4):
 
     sys.exit();
 
+username = sys.argv[1]
+apiKey = sys.argv[2]
+productId = sys.argv[3]
+
 # Extract all data from sprintly for product
 def request(path, data=None):
     if (data is None):
@@ -20,7 +24,7 @@ def request(path, data=None):
     else:
         request = urllib2.Request("https://sprint.ly/api" + path, data)
     base64string = base64.encodestring(
-        '%s:%s' % (sys.argv[1], sys.argv[2])).replace('\n', '')
+        '%s:%s' % (username, apiKey)).replace('\n', '')
     request.add_header("Authorization", "Basic %s" % base64string)   
     result = urllib2.urlopen(request)
     return result.read()
@@ -33,34 +37,59 @@ highestItemNumber = -1
 
 MAX_ITEM_LIMIT = 1000
 
-def getItems(status, offset=0):
-    global limit, items, highestItemNumber, MAX_ITEM_LIMIT
+def getItems(status, archived, offset=0):
+    global limit, items, MAX_ITEM_LIMIT
+
+    requestString = ('/products/' + str(productId) + '/items.json?limit=' + str(limit) + 
+        '&status=' + status + '&offset=' + str(offset))
     
-    theseItems = json.loads(
-        request('/products/427/items.json?limit=' + str(limit) + 
-        '&status=' + status + '&offset=' + str(offset)))
+    if archived:
+        requestString += "&archived=1"
+
+    theseItems = json.loads(request(requestString))
 
     for item in theseItems:
-        if item['number'] > highestItemNumber:
-            highestItemNumber = item['number']
+        addItem(item)
+        
+        # get children if a story item
+        if item['type'] == 'story':
+            childItems = json.loads(
+                request('/products/' + str(productId) + '/items/' + str(item['number']) + 
+                    '/children.json'))
 
-        items.append(item)
+            print 'got ', len(childItems), ' child items'
 
+            for childItem in childItems:
+                addItem(childItem)
+                
     print 'got ', len(theseItems), ' of status ', status
-
+           
     if (len(theseItems) >= limit and offset < MAX_ITEM_LIMIT):
-        getItems(status, highestItemNumber, offset + limit)
+        getItems(status, archived, offset + limit)
 
-getItems("backlog")
-getItems("in-progress")
-getItems("completed")
-getItems("accepted")
+def addItem(item):
+    global highestItemNumber
+
+    items.append(item)
+    if item['number'] > highestItemNumber:
+        highestItemNumber = item['number']
+
+def getAllStatuses(archived):
+    getItems("backlog", archived)
+    getItems("in-progress", archived)
+    getItems("completed", archived)
+    getItems("accepted", archived)
+
+getAllStatuses(False)
+getAllStatuses(True)
+
+print 'total items = ', len(items)
 
 comments = {}
 
 for number in range(1, highestItemNumber + 1):
     try:
-        comment = json.loads(request('/products/427/items/' + str(number) + '/comments.json'))
+        comment = json.loads(request('/products/' + str(productId) + '/items/' + str(number) + '/comments.json'))
         comments[number] = comment
         print 'got comments for item ', number
     except:   
