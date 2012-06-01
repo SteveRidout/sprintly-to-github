@@ -1,7 +1,7 @@
 sprintly-to-github
 ==================
 
-Python scripts for fetching data from sprintly and pushing it to github issue tracker. It will try to overwrite any existing issues but may not be able to if you didn't create them, I haven't tried this.
+Python scripts for fetching data from sprintly and pushing it to github issue tracker. Best used on a github repo without any existing issues. If there are existing github issues it will try to overwrite them but will probably not be able to if you didn't create them, I haven't tested this.
 
 I've only tested it on one project which went OK: [csl-editor](https://github.com/citation-style-editor/csl-editor).
 
